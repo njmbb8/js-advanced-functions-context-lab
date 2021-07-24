@@ -1,22 +1,79 @@
-/* Your Code Here */
+function createEmployeeRecord(args) {
+    return {
+        firstName: args[0],
+        familyName: args[1],
+        title: args[2],
+        payPerHour: args[3],
+        timeInEvents: [],
+        timeOutEvents: []
+    }
+}
 
-/*
- We're giving you this function. Take a look at it, you might see some usage
- that's new and different. That's because we're avoiding a well-known, but
- sneaky bug that we'll cover in the next few lessons!
+function createEmployeeRecords(args){
+    const arr = args.map((employeeRecord) => createEmployeeRecord(employeeRecord))
+    return arr;
+}
 
- As a result, the lessons for this function will pass *and* it will be available
- for you to use if you need it!
- */
+function createTimeInEvent(employeeRecord, dateStamp){
+    employeeRecord.timeInEvents.push({
+        type: "TimeIn",
+        hour: parseInt(dateStamp.slice(-4)),
+        date: dateStamp.slice(0, -5)
+    });
 
-let allWagesFor = function () {
-    let eligibleDates = this.timeInEvents.map(function (e) {
-        return e.date
+    return employeeRecord;
+}
+
+function createTimeOutEvent(employeeRecord, dateStamp){
+    employeeRecord.timeOutEvents.push({
+        type: 'TimeOut',
+        hour: parseInt(dateStamp.slice(-4)),
+        date: dateStamp.slice(0, -5)
     })
 
-    let payable = eligibleDates.reduce(function (memo, d) {
-        return memo + wagesEarnedOnDate.call(this, d)
-    }.bind(this), 0) // <== Hm, why did we need to add bind() there? We'll discuss soon!
+    return employeeRecord;
+}
 
-    return payable
+function hoursWorkedOnDate(employeeRecord, date) {
+    let clockInTime;
+    let clockOutTime;
+    employeeRecord.timeInEvents.map(function(timeInEvent){
+        if(timeInEvent.date === date){
+            clockInTime = timeInEvent.hour;
+        }
+    })
+
+    employeeRecord.timeOutEvents.map(function(timeOutEvent) {
+        if(timeOutEvent.date === date){
+            clockOutTime = timeOutEvent.hour;
+        }
+    })
+
+    return Math.abs(clockInTime - clockOutTime)/100;
+}
+
+function wagesEarnedOnDate(employeeRecord, date){
+    return employeeRecord.payPerHour * hoursWorkedOnDate(employeeRecord, date);
+}
+
+function allWagesFor(employeeRecord) {
+    const total = employeeRecord.timeInEvents.reduce(function(totalWages, currentDate){
+        totalWages += wagesEarnedOnDate(employeeRecord, currentDate.date)
+        return totalWages;
+    }, 0);
+    return total; 
+}
+
+function findEmployeeByFirstName(srcArray, firstName){
+    let match;
+    srcArray.forEach(function(employeeRecord){
+        if(employeeRecord.firstName === firstName){
+            match = employeeRecord;
+        }
+    })
+    return match;
+}
+
+function calculatePayroll(employeeRecords) {
+    return employeeRecords.reduce((total, current) => total += allWagesFor(current), 0);
 }
